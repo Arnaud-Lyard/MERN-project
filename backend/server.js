@@ -6,6 +6,9 @@ const projectRoutes = require('./routes/projects')
 const userRoutes = require('./routes/user')
 var path = require('path');
 
+const user = require('./models')
+const Role = user.role
+
 // express app
 const app = express()
 
@@ -33,8 +36,33 @@ mongoose.connect(process.env.MONGO_URI)
     // listen to port
     app.listen(process.env.PORT, () => {
       console.log('listening for requests on port', process.env.PORT)
+      initial();
     })
   })
   .catch((err) => {
     console.log(err)
-  }) 
+    process.exit();
+  })
+  
+  function initial() {
+    Role.estimatedDocumentCount((err, count) => {
+      if (!err && count === 0) {
+        new Role({
+          name: "user"
+        }).save(err => {
+          if (err) {
+            console.log("error", err);
+          }
+          console.log("added 'user' to roles collection");
+        });
+        new Role({
+          name: "admin"
+        }).save(err => {
+          if (err) {
+            console.log("error", err);
+          }
+          console.log("added 'admin' to roles collection");
+        });
+      }
+    });
+  }

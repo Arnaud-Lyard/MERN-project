@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useProjectsContext } from '../hooks/useProjectsContext'
 import { useAuthContext } from '../hooks/useAuthContext'
 import Select from 'react-select';
@@ -9,14 +9,14 @@ const ProjectForm = () => {
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  // const [technology, setTechnology] = useState('')
   const [error, setError] = useState(null)
   const [emptyFields, setEmptyFields] = useState([])
 
-  const [image, setImage] = useState();
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [image, setImage] = useState('');
+  const [selectedTechnology, setSelectedTechnology] = useState(null);
+  const imageRef = useRef(null);
 
-
+  // React-select options
   const options = [
     { value: 'Html', label: 'Html' },
     { value: 'Css', label: 'Css' },
@@ -28,20 +28,26 @@ const ProjectForm = () => {
     { value: 'Vue.js', label: 'Vue.js' },
   ];
   
+  // Get image file from form
   const handleImage = (e) => {
-    console.log(e.target.files)
     setImage(e.target.files[0])
     }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log(image)
+
+    // User must be logged in
     if (!user) {
       setError('Vous devez être connecté')
       return
     }
-    // Extract an array object to get each option value
-    let technology = selectedOption.map(option => option.value);
 
+    // If there are technology : Extract an array object to get each option value
+    let technology = "";
+    selectedTechnology && (technology = selectedTechnology.map(option => option.value))
+
+    // Prepare send FormData to backend with file
     const formData = new FormData()
     formData.append('title', title);
     formData.append('description', description);
@@ -57,21 +63,23 @@ const ProjectForm = () => {
     })
     const json = await response.json()
 
+    // Set error if a field is empty
     if (!response.ok) {
       setError(json.error)
       setEmptyFields(json.emptyFields)
     }
+
+    // Send data and reset form
     if (response.ok) {
       setError(null)
       setTitle('')
       setDescription('')
-      setSelectedOption([])
-      setImage()
+      setSelectedTechnology([])
+      setImage('')
       setEmptyFields([])
       dispatch({type: 'CREATE_PROJECT', payload: json})
+      imageRef.current.value = null;
     }
-    console.log(selectedOption)
-
   }
   
   return (
@@ -97,25 +105,28 @@ const ProjectForm = () => {
         className={emptyFields.includes('description') ? 'error' : ''}>
       </textarea>
 
-      <label>Technologies :</label>
+      <label>Technologies utilisées :</label>
       <Select
+        id="technology"
         isMulti
-        value={selectedOption}
-        onChange={setSelectedOption}
+        value={selectedTechnology}
+        onChange={setSelectedTechnology}
         options={options}
         placeholder="Sélectionner les technologies utilisées"
         isSearchable={true}
         isClearable
+        className={emptyFields.includes('technology') ? 'error' : ''}
       />
 
       <label>Images :</label>
       <input 
+        ref={imageRef}
         id="image"
-        type="file" 
+        type="file"
         onChange={handleImage} 
-        className={emptyFields.includes('technology') ? 'error' : ''}
+        className={emptyFields.includes('image') ? 'error' : ''}
       />
-      {image && <img src={image ? URL.createObjectURL(image) : null} width={150} height={70} />}
+      {image && <img src={image ? URL.createObjectURL(image) : null} alt={title} width={150} height={70} />}
 
       <button>Add Project</button>
       {error && <div className="error">{error}</div>}

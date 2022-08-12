@@ -13,7 +13,13 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: true
-  }
+  },
+  roles: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role"
+    }
+  ]
 })
 
 // static signup method
@@ -40,26 +46,6 @@ userSchema.statics.signup = async function(email, password) {
   const hash = await bcrypt.hash(password, salt)
 
   const user = await this.create({ email, password: hash })
-
-  return user
-}
-
-// static login method
-userSchema.statics.login = async function(email, password) {
-
-  if (!email || !password) {
-    throw Error('Tous les champs doivent être remplis')
-  }
-
-  const user = await this.findOne({ email })
-  if (!user) {
-    throw Error('Adresse email incorrecte')
-  }
-
-  const match = await bcrypt.compare(password, user.password)
-  if (!match) {
-    throw Error('Mot de passe incorrect')
-  }
 
   return user
 }

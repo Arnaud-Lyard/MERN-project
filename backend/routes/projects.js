@@ -7,13 +7,24 @@ const {
   deleteProject, 
   updateProject
 } = require('../controllers/projectController')
-const requireAuth = require('../middlewares/requireAuth')
 const projectImageUpload = require('../middlewares/multerConfig');
+
+// const verifySignUp = require("../middlewares/verifySignUp");
+const requireAuth = require("../middlewares/requireAuth");
+
+const controller = require("../controllers/roleController");
 
 const router = express.Router()
 
 // require auth for all project routes
-router.use(requireAuth)
+router.use([requireAuth.verifyToken, requireAuth.isAdmin])
+
+
+// router.get(
+//   "/admin",
+//   [requireAuth.verifyToken, requireAuth.isAdmin],
+//     controller.adminBoard
+// );
 
 // GET all projects
 router.get('/', getProjects)
@@ -29,5 +40,7 @@ router.delete('/:id', deleteProject)
 
 // UPDATE a project
 router.patch('/:id', projectImageUpload, updateProject)
+
+
 
 module.exports = router

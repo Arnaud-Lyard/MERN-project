@@ -31,7 +31,10 @@ const createProject = async (req, res) => {
   const {title, description, technology} = req.body
 
   let emptyFields = []
-
+  
+  if(!req.file){
+    emptyFields.push('image')
+  }
   if (!title) {
     emptyFields.push('title')
   }
@@ -40,9 +43,6 @@ const createProject = async (req, res) => {
   }
   if (!technology) {
     emptyFields.push('technology')
-  }
-  if(!req.file){
-    emptyFields.push('image')
   }
   if (emptyFields.length > 0) {
     return res.status(400).json({ error: 'Merci de remplir tous les champs', emptyFields })
